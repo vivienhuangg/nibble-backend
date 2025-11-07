@@ -21,4 +21,8 @@
 
 *   **Persistence Model**:
     *   **Concept Spec**: The `Step` concept defines its `state` and notes that its `actions` are "Generally managed within Recipe/Version actions," leaving its data persistence model (i.e., whether it's a top-level entity or embedded) implicit.
-    *   **Implementation**: The `Step` is explicitly implemented as an **embedded document** (value object) within `Recipe` and `Version` documents in MongoDB, rather than as a standalone collection managed by its own `StepConcept` class. The `StepConcept` class itself is a structural placeholder and does not manage any database collections.
+    *   **Implementation**: The `Step` is explicitly implemented as an **embedded document** (value object) within `Recipe` documents in MongoDB, rather than as a standalone collection managed by its own `StepConcept` class. The `StepConcept` class itself is a structural placeholder and does not manage any database collections. **Note:** The `Version` concept mentioned in the spec was not implemented (see [Version/design-updates.md](../Version/design-updates.md)).
+
+*   **State Field Changes**:
+    *   **Concept Spec**: Includes a `duration: Optional[Integer]` field in the state.
+    *   **Implementation**: The `duration` field was removed from the implementation. The `Step` interface only includes `description: string` and `notes?: string`.

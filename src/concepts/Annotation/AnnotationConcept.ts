@@ -84,7 +84,7 @@ export default class AnnotationConcept {
 
     try {
       await this.annotations.insertOne(newAnnotation);
-      return { annotation: newAnnotationId };
+      return { annotation: newAnnotationId }; // Return object for sync engine
     } catch (e) {
       console.error("Failed to insert annotation:", e);
       return { error: "Failed to create annotation." };
@@ -126,7 +126,7 @@ export default class AnnotationConcept {
         { _id: annotation },
         { $set: { text: newText.trim() } },
       );
-      return {};
+      return {}; // Return object for sync engine
     } catch (e) {
       console.error("Failed to update annotation text:", e);
       return { error: "Failed to edit annotation." };
@@ -164,7 +164,7 @@ export default class AnnotationConcept {
         { _id: annotation },
         { $set: { resolved: resolved } },
       );
-      return {};
+      return {}; // Return object for sync engine
     } catch (e) {
       console.error("Failed to update annotation resolution status:", e);
       return { error: "Failed to resolve annotation." };
@@ -197,10 +197,36 @@ export default class AnnotationConcept {
 
     try {
       await this.annotations.deleteOne({ _id: annotation });
-      return {};
+      return {}; // Return object for sync engine
     } catch (e) {
       console.error("Failed to delete annotation:", e);
       return { error: "Failed to delete annotation." };
+    }
+  }
+
+  /**
+   * deleteByRecipe(recipeId: Recipe): Empty | (error: string)
+   *
+   * **requires** recipeId exists (implicitly)
+   *
+   * **effects** removes all annotations where recipe = recipeId
+   *
+   * **purpose** Support cascade deletion when a recipe is deleted
+   */
+  async deleteByRecipe({
+    recipeId,
+  }: {
+    recipeId: Recipe;
+  }): Promise<Empty | { error: string }> {
+    try {
+      const result = await this.annotations.deleteMany({ recipe: recipeId });
+      console.log(
+        `Deleted ${result.deletedCount} annotation(s) for recipe ${recipeId}`,
+      );
+      return {}; // Return object for sync engine
+    } catch (e) {
+      console.error("Failed to delete annotations by recipe:", e);
+      return { error: "Failed to delete annotations for recipe." };
     }
   }
 
@@ -219,13 +245,13 @@ export default class AnnotationConcept {
     recipe,
   }: {
     recipe: ID;
-  }): Promise<{ annotation: AnnotationDoc }[] | { error: string }> {
+  }): Promise<{ annotation: AnnotationDoc }[] | Array<{ error: string }>> {
     try {
       const annotations = await this.annotations.find({ recipe }).toArray();
       return annotations.map((a) => ({ annotation: a }));
     } catch (e) {
       console.error("Failed to retrieve annotations for recipe:", e);
-      return { error: "Failed to retrieve annotations for recipe." };
+      return [{ error: "Failed to retrieve annotations for recipe." }];
     }
   }
 
@@ -240,7 +266,7 @@ export default class AnnotationConcept {
     annotation,
   }: {
     annotation: ID;
-  }): Promise<{ annotation: AnnotationDoc }[] | { error: string }> {
+  }): Promise<{ annotation: AnnotationDoc }[] | Array<{ error: string }>> {
     try {
       const foundAnnotation = await this.annotations.findOne({
         _id: annotation,
@@ -248,7 +274,7 @@ export default class AnnotationConcept {
       return foundAnnotation ? [{ annotation: foundAnnotation }] : [];
     } catch (e) {
       console.error("Failed to retrieve annotation by ID:", e);
-      return { error: "Failed to retrieve annotation by ID." };
+      return [{ error: "Failed to retrieve annotation by ID." }];
     }
   }
 }

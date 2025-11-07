@@ -68,7 +68,7 @@ export default class UserConcept {
     };
 
     await this.users.insertOne(newUser);
-    return { user: newUserId };
+    return { user: newUserId }; // Return object for sync engine
   }
 
   /**
@@ -95,7 +95,7 @@ export default class UserConcept {
       return { error: "Invalid username or password." };
     }
 
-    return { user: user._id };
+    return { user: user._id }; // Return object for sync engine
   }
 
   /**
@@ -115,36 +115,38 @@ export default class UserConcept {
     newName?: string;
     newUsername?: string;
     newPreferences?: Record<string, unknown>;
-  }): Promise<Empty | { error: string }> {
+  }): Promise<Empty | Array<{ error: string }>> {
     const existingUser = await this.users.findOne({ _id: userId });
     if (!existingUser) {
-      return { error: "User not found." };
+      return [{ error: "User not found." }];
     }
 
     const updateFields: Partial<UserDoc> = {};
 
     if (newName !== undefined) {
       if (typeof newName !== "string" || newName.trim() === "") {
-        return { error: "New name must be a non-empty string." };
+        return [{ error: "New name must be a non-empty string." }];
       }
       updateFields.name = newName;
     }
 
     if (newUsername !== undefined) {
       if (typeof newUsername !== "string" || newUsername.trim() === "") {
-        return { error: "New username must be a non-empty string." };
+        return [{ error: "New username must be a non-empty string." }];
       }
       // Check if new username is already taken by another user
-      const userWithNewUsername = await this.users.findOne({ username: newUsername });
+      const userWithNewUsername = await this.users.findOne({
+        username: newUsername,
+      });
       if (userWithNewUsername && userWithNewUsername._id !== userId) {
-        return { error: "This username is already taken by another user." };
+        return [{ error: "This username is already taken by another user." }];
       }
       updateFields.username = newUsername;
     }
 
     if (newPreferences !== undefined) {
       if (typeof newPreferences !== "object" || newPreferences === null) {
-        return { error: "New preferences must be a valid object." };
+        return [{ error: "New preferences must be a valid object." }];
       }
       updateFields.preferences = {
         ...existingUser.preferences,
@@ -167,14 +169,13 @@ export default class UserConcept {
    * @effects returns the details (name, username, preferences) of the specified user.
    */
   async _getUserDetails({ user: userId }: { user: ID }): Promise<
-    | Array<{
+    Array<{
       user: {
         name: string;
         username: string;
         preferences: Record<string, unknown>;
       };
-    }>
-    | { error: string }
+    }> | Array<{ error: string }>
   > {
     const user = await this.users.findOne(
       { _id: userId },
@@ -182,7 +183,7 @@ export default class UserConcept {
     );
 
     if (!user) {
-      return { error: "User not found." };
+      return [{ error: "User not found." }];
     }
 
     return [
@@ -206,9 +207,9 @@ export default class UserConcept {
     username,
   }: {
     username: string;
-  }): Promise<Array<{ user: ID }> | { error: string }> {
+  }): Promise<Array<{ user: ID }> | Array<{ error: string }>> {
     if (!username) {
-      return { error: "Username cannot be empty." };
+      return [{ error: "Username cannot be empty." }];
     }
 
     const user = await this.users.findOne(
@@ -216,7 +217,7 @@ export default class UserConcept {
       { projection: { _id: 1 } },
     );
     if (!user) {
-      return { error: "User not found." };
+      return [{ error: "User not found." }];
     }
 
     return [{ user: user._id }];

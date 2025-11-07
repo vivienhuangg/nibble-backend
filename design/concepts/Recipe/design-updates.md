@@ -28,4 +28,12 @@ Here are the contrasting major design changes from the `Recipe` concept specific
 
 *   **Explicit Query Definitions:**
     *   **Concept Spec:** The `Recipe` concept specification does not explicitly define any query actions.
-    *   **Implementation:** Several explicit query methods (`_getRecipeById`, `_listRecipesByOwner`, `_searchRecipesByTag`) are added to the `RecipeConcept` class to allow for practical data retrieval.
+    *   **Implementation:** Several explicit query methods (`_getRecipeById`, `_listRecipesByOwner`, `_searchRecipesByTag`, `_getForkCount`, `_listForksOfRecipe`) are added to the `RecipeConcept` class to allow for practical data retrieval.
+
+*   **Recipe Forking and Lineage Tracking:**
+    *   **Concept Spec:** Originally, recipe versioning and modification tracking were planned to be handled by a separate `Version` concept (see [Version/design-updates.md](../Version/design-updates.md)).
+    *   **Implementation:** The `Version` concept was not implemented. Instead, recipe lineage is tracked directly within the `Recipe` concept via the `forkedFrom` field, which stores the ID of the parent recipe when a recipe is forked. This provides a simpler mechanism for tracking recipe derivations without the complexity of a full versioning system.
+
+*   **AI-Assisted Recipe Modification:**
+    *   **Concept Spec:** AI-assisted recipe modification was originally planned to be handled by the `Version` and `VersionDraft` concepts, with complex approval workflows.
+    *   **Implementation:** AI functionality is integrated directly into the `Recipe` concept through two new actions: `draftRecipeWithAI(author, recipe, goal)` which generates AI suggestions using Gemini API, and `applyDraft(owner, recipe, draftDetails)` which applies approved modifications directly to the recipe. This eliminates the need for separate transient draft storage and provides a more streamlined user experience.

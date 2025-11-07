@@ -1,8 +1,8 @@
 // This import loads the `.env` file as environment variables
 import "jsr:@std/dotenv/load";
+import { Db, MongoClient } from "npm:mongodb";
+import { ID } from "@utils/types.ts";
 import { generate } from "jsr:@std/uuid/unstable-v7";
-import { type Db, MongoClient } from "npm:mongodb";
-import type { ID } from "@utils/types.ts";
 
 async function initMongoClient() {
   const DB_CONN = Deno.env.get("MONGODB_URL");
@@ -48,7 +48,7 @@ async function dropAllCollections(db: Db): Promise<void> {
  */
 export async function getDb() {
   const [client, DB_NAME] = await init();
-  return [client.db(DB_NAME), client];
+  return [client.db(DB_NAME), client] as [Db, MongoClient];
 }
 
 /**

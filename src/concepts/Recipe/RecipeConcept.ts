@@ -415,24 +415,24 @@ export default class RecipeConcept {
     recipe,
   }: {
     recipe: RecipeId;
-  }): Promise<{ recipe: RecipeDoc[] } | { error: string }> {
+  }): Promise<Array<{ recipe: RecipeDoc }> | Array<{ error: string }>> {
     if (!recipe) {
-      return { error: "Recipe ID must be provided." };
+      return [{ error: "Recipe ID must be provided." }];
     }
 
     try {
       const foundRecipe = await this.recipes.findOne({ _id: recipe });
       if (!foundRecipe) {
-        return { error: "Recipe not found." };
+        return [{ error: "Recipe not found." }];
       }
-      return { recipe: [foundRecipe] }; // Queries return an array
+      return [{ recipe: foundRecipe }]; // Queries return an array
     } catch (e) {
       console.error(
         `Failed to retrieve recipe ${recipe}: ${
           e instanceof Error ? e.message : String(e)
         }`,
       );
-      return { error: "Failed to retrieve recipe due to a database error." };
+      return [{ error: "Failed to retrieve recipe due to a database error." }];
     }
   }
 
@@ -447,21 +447,21 @@ export default class RecipeConcept {
     owner,
   }: {
     owner: User;
-  }): Promise<{ recipe: RecipeDoc[] } | { error: string }> {
+  }): Promise<Array<{ recipe: RecipeDoc }> | Array<{ error: string }>> {
     if (!owner) {
-      return { error: "Owner ID must be provided." };
+      return [{ error: "Owner ID must be provided." }];
     }
 
     try {
       const recipes = await this.recipes.find({ owner }).toArray();
-      return { recipe: recipes };
+      return recipes.map((recipe) => ({ recipe }));
     } catch (e) {
       console.error(
         `Failed to list recipes for owner ${owner}: ${
           e instanceof Error ? e.message : String(e)
         }`,
       );
-      return { error: "Failed to list recipes due to a database error." };
+      return [{ error: "Failed to list recipes due to a database error." }];
     }
   }
 
@@ -476,21 +476,21 @@ export default class RecipeConcept {
     tag,
   }: {
     tag: string;
-  }): Promise<{ recipe: RecipeDoc[] } | { error: string }> {
+  }): Promise<Array<{ recipe: RecipeDoc }> | Array<{ error: string }>> {
     if (!tag || tag.trim() === "") {
-      return { error: "Tag cannot be empty for search." };
+      return [{ error: "Tag cannot be empty for search." }];
     }
 
     try {
       const recipes = await this.recipes.find({ tags: tag }).toArray();
-      return { recipe: recipes };
+      return recipes.map((recipe) => ({ recipe }));
     } catch (e) {
       console.error(
         `Failed to search recipes by tag '${tag}': ${
           e instanceof Error ? e.message : String(e)
         }`,
       );
-      return { error: "Failed to search recipes due to a database error." };
+      return [{ error: "Failed to search recipes due to a database error." }];
     }
   }
 
@@ -543,34 +543,34 @@ export default class RecipeConcept {
     recipe,
   }: {
     recipe: RecipeId;
-  }): Promise<{ recipe: RecipeDoc[] } | { error: string }> {
+  }): Promise<Array<{ recipe: RecipeDoc }> | Array<{ error: string }>> {
     if (!recipe) {
-      return { error: "Recipe ID must be provided." };
+      return [{ error: "Recipe ID must be provided." }];
     }
 
     try {
       // First check if the recipe exists
       const existingRecipe = await this.recipes.findOne({ _id: recipe });
       if (!existingRecipe) {
-        return { error: "Recipe not found." };
+        return [{ error: "Recipe not found." }];
       }
 
       // Find all recipes that have this recipe as their forkedFrom value
       const forks = await this.recipes.find({ forkedFrom: recipe }).toArray();
-      return { recipe: forks };
+      return forks.map((recipe) => ({ recipe }));
     } catch (e) {
       console.error(
         `Failed to list forks for recipe ${recipe}: ${
           e instanceof Error ? e.message : String(e)
         }`,
       );
-      return { error: "Failed to list forks due to a database error." };
+      return [{ error: "Failed to list forks due to a database error." }];
     }
   }
 
   /**
    * draftRecipeWithAI (author: User, recipe: RecipeId, goal: String):
-   *   (draftId: ID, baseRecipe: RecipeId, requester: User, goal: String, ingredients: List[Ingredient], steps: Step[], notes: String, confidence?: number, created: Date, expires: Date) | (error: String)
+   *   (draftId: ID, baseRecipe: RecipeId, requester: User, goal: String, title: String, ingredients: List[Ingredient], steps: Step[], notes: String, confidence?: number, created: Date, expires: Date) | (error: String)
    *
    * **purpose** Uses AI to suggest modifications to a recipe based on a user's goal.
    *
@@ -592,6 +592,7 @@ export default class RecipeConcept {
       baseRecipe: RecipeId;
       requester: User;
       goal: string;
+      title: string;
       ingredients: Ingredient[];
       steps: Step[];
       notes: string;
@@ -607,11 +608,15 @@ export default class RecipeConcept {
 
     // Fetch the actual recipe data
     const recipeResult = await this._getRecipeById({ recipe });
-    if ("error" in recipeResult) {
-      return { error: `Failed to fetch recipe: ${recipeResult.error}` };
+    if (recipeResult.length === 0 || "error" in recipeResult[0]) {
+      return {
+        error: `Failed to fetch recipe: ${
+          (recipeResult[0] as any)?.error || "Recipe not found"
+        }`,
+      };
     }
 
-    const recipeData = recipeResult.recipe[0];
+    const recipeData = recipeResult[0].recipe;
     if (!recipeData) {
       return { error: "Recipe not found." };
     }
@@ -668,6 +673,7 @@ USER'S GOAL: ${goal}
 
 Please provide a modified version of this recipe that achieves the user's goal. Return ONLY a JSON object with this exact structure (no markdown, no explanation):
 {
+  "title": "string",
   "ingredients": [{"name": "string", "quantity": "string", "unit": "string (optional)", "notes": "string (optional)"}],
   "steps": [{"description": "string", "notes": "string (optional)"}],
   "notes": "Brief summary of changes made",
@@ -695,6 +701,7 @@ Please provide a modified version of this recipe that achieves the user's goal. 
 
       // Parse the JSON response
       let llmResponse: {
+        title?: string;
         ingredients?: Ingredient[];
         steps?: Step[];
         notes?: string;
@@ -715,11 +722,17 @@ Please provide a modified version of this recipe that achieves the user's goal. 
         };
       }
 
+      const suggestedTitle = typeof llmResponse.title === "string" &&
+          llmResponse.title.trim().length > 0
+        ? llmResponse.title.trim()
+        : `${recipeData.title} (AI Draft)`;
+
       return {
         draftId,
         baseRecipe: recipe,
         requester: author,
         goal,
+        title: suggestedTitle,
         ingredients: llmResponse.ingredients || [],
         steps: llmResponse.steps || [],
         notes: llmResponse.notes ||

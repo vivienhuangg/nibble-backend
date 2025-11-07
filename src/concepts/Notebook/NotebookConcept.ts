@@ -68,7 +68,7 @@ export default class NotebookConcept {
 
     await this.notebooks.insertOne(newNotebook);
 
-    return { notebook: newNotebookId };
+    return { notebook: newNotebookId }; // Return object for sync engine
   }
 
   /**
@@ -105,7 +105,7 @@ export default class NotebookConcept {
       { $addToSet: { members: member } }, // $addToSet ensures uniqueness
     );
 
-    return {};
+    return {}; // Return object for sync engine
   }
 
   /**
@@ -132,7 +132,9 @@ export default class NotebookConcept {
       return { error: "Only the notebook owner can remove members." };
     }
     if (member === owner) {
-      return { error: "The owner cannot remove themselves from the notebook." };
+      return {
+        error: "The owner cannot remove themselves from the notebook.",
+      };
     }
     // Check if member is actually in the list
     if (!notebookDoc.members.includes(member)) {
@@ -144,7 +146,7 @@ export default class NotebookConcept {
       { $pull: { members: member } },
     );
 
-    return {};
+    return {}; // Return object for sync engine
   }
 
   /**
@@ -194,7 +196,7 @@ export default class NotebookConcept {
       { $addToSet: { recipes: recipe } },
     );
 
-    return {};
+    return {}; // Return object for sync engine
   }
 
   /**
@@ -236,7 +238,7 @@ export default class NotebookConcept {
       { $pull: { recipes: recipe } },
     );
 
-    return {};
+    return {}; // Return object for sync engine
   }
 
   /**
@@ -267,7 +269,7 @@ export default class NotebookConcept {
     // such as unsharing recipes from this deleted notebook from other contexts, or notifying members.
     // The concept itself only performs its direct effect.
 
-    return {};
+    return {}; // Return object for sync engine
   }
 
   // Queries (not explicitly required by the problem statement, but good for completeness)
@@ -283,12 +285,14 @@ export default class NotebookConcept {
     notebook,
   }: {
     notebook: ID;
-  }): Promise<NotebookDocument[] | { error: string }> {
+  }): Promise<
+    Array<{ notebook: NotebookDocument }> | Array<{ error: string }>
+  > {
     const notebookDoc = await this.notebooks.findOne({ _id: notebook });
     if (!notebookDoc) {
-      return { error: "Notebook not found." };
+      return [{ error: "Notebook not found." }];
     }
-    return [notebookDoc];
+    return [{ notebook: notebookDoc }];
   }
 
   /**
@@ -302,9 +306,11 @@ export default class NotebookConcept {
     owner,
   }: {
     owner: User;
-  }): Promise<NotebookDocument[] | { error: string }> {
+  }): Promise<
+    Array<{ notebook: NotebookDocument }> | Array<{ error: string }>
+  > {
     const notebooks = await this.notebooks.find({ owner: owner }).toArray();
-    return notebooks;
+    return notebooks.map((notebook) => ({ notebook }));
   }
 
   /**
@@ -318,9 +324,11 @@ export default class NotebookConcept {
     member,
   }: {
     member: User;
-  }): Promise<NotebookDocument[] | { error: string }> {
+  }): Promise<
+    Array<{ notebook: NotebookDocument }> | Array<{ error: string }>
+  > {
     const notebooks = await this.notebooks.find({ members: member }).toArray();
-    return notebooks;
+    return notebooks.map((notebook) => ({ notebook }));
   }
 
   /**
@@ -334,8 +342,10 @@ export default class NotebookConcept {
     recipe,
   }: {
     recipe: Recipe;
-  }): Promise<NotebookDocument[] | { error: string }> {
+  }): Promise<
+    Array<{ notebook: NotebookDocument }> | Array<{ error: string }>
+  > {
     const notebooks = await this.notebooks.find({ recipes: recipe }).toArray();
-    return notebooks;
+    return notebooks.map((notebook) => ({ notebook }));
   }
 }

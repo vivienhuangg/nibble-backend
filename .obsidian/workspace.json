@@ -41,16 +41,58 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "design/concepts/Annotation/api-spec.md",
+                "file": "design/concepts/Annotation/Annotation.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "api-spec"
+              "title": "Annotation"
+            }
+          },
+          {
+            "id": "ae354444f8ba67fa",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "design/concepts/Ingredient/Ingredient.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Ingredient"
+            }
+          },
+          {
+            "id": "7aec88a07825b3c3",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "design/concepts/User/sync.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "sync"
+            }
+          },
+          {
+            "id": "48512fe57e2e8040",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "src/concepts/Requesting/README.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "README"
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 4
       }
     ],
     "direction": "vertical"
@@ -137,7 +179,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "design/concepts/Annotation/api-spec.md",
+                "file": "design/concepts/User/sync.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -147,7 +189,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for api-spec"
+              "title": "Backlinks for sync"
             }
           },
           {
@@ -211,43 +253,43 @@
       "bases:Create new base": false
     }
   },
-  "active": "9b42b4503c7d88ad",
+  "active": "7aec88a07825b3c3",
   "lastOpenFiles": [
-    "COMPONENT_DATAFLOW.md",
-    "API_QUICK_REFERENCE.md",
-    "FRONTEND_BACKEND_CROSSREF.md",
-    "clear-db.ts",
-    "api-spec.md",
-    "design/concepts/Ingredient/api-spec.md",
-    "design/concepts/Notebook/api-spec.md",
-    "design/concepts/Recipe/api-spec.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/20251020_204139.44ceff06.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/steps/API Specification.d73c28cc.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/steps/response.6d76b65d.md",
-    "design/concepts/Step/api-spec.md",
-    "design/concepts/User/api-spec.md",
-    "design/concepts/Version/api-spec.md",
-    "design/concepts/VersionDraft/api-spec.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/steps/prompt.efe0c8e1.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/steps/prompt.9fff6405.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/steps/file.f007798c.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/steps/file.56b66087.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/steps/approach.5df2171f.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/steps/_.fa3ad648.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/steps/_.ee4d1e5e.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/steps/_.db39d951.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/steps/_.92ef9357.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/steps/_.70b30df5.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/steps/_.5da05fda.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/steps/_.534e93ad.md",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version/api-spec.md/steps",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Version",
-    "context/Users/vivienhuang/6.1040/nibble-backend/src/concepts/Version/VersionConcept.ts",
-    "context/Users/vivienhuang/6.1040/nibble-backend/src/concepts/Version",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/VersionDraft/api-spec.md/steps",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/VersionDraft",
-    "context/Users/vivienhuang/6.1040/nibble-backend/src/concepts/VersionDraft/VersionDraftConcept.ts",
-    "context/Users/vivienhuang/6.1040/nibble-backend/src/concepts/VersionDraft",
-    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/User/api-spec.md/steps"
+    "TIMEOUT_ISSUE_RESOLVED.md",
+    "PATH_FIX_SUMMARY.md",
+    "ENDPOINT_CONFIRMATION.md",
+    "COMPLETE_SUMMARY.md",
+    "API_SPECIFICATION.md",
+    "FRONTEND_API_GUIDE.md",
+    "src/syncs/user_registration.sync.ts",
+    "SYNC_IMPLEMENTATION_MASTER_SUMMARY.md",
+    "ALL_ISSUES_RESOLVED_FINAL.md",
+    "PASSTHROUGH_FIXES_COMPLETE.md",
+    "src/syncs/user_auth.sync.ts",
+    "CRITICAL_SYNC_REVIEW.md",
+    "SYNC_NECESSITY_ANALYSIS.md",
+    "ISSUES_RESOLVED.md",
+    "FINAL_IMPLEMENTATION_REPORT.md",
+    "src/concepts/Sessioning/SessioningConcept.ts",
+    "src/concepts/Sessioning",
+    "src/syncs/version_stub.sync.ts",
+    "IMPLEMENTATION_COMPLETE.md",
+    "design/concepts/SYNC_IMPLEMENTATION_SUMMARY.md",
+    "design/concepts/_archived/VersionDraft/design-updates.md",
+    "design/concepts/_archived/VersionDraft/VersionDraft.md",
+    "design/concepts/_archived/Version/design-updates.md",
+    "design/concepts/_archived/Version/Version.md",
+    "design/concepts/_archived/VersionDraft",
+    "design/concepts/_archived/Version",
+    "design/concepts/_archived",
+    "design/concepts/IMPLEMENTATION_PLAN.md",
+    "design/concepts/SYNC_IMPLEMENTATION_ANALYSIS.md",
+    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/User/sync.md/20251105_162141.4ea19fd3.md",
+    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/User/sync.md/steps/response.c831e085.md",
+    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/User/sync.md/20251105_162118.1959b0e0.md",
+    "design/concepts/Step/sync.md",
+    "context/Users/vivienhuang/6.1040/nibble-backend/design/concepts/Step/sync.md/20251105_162037.b1f13a87.md",
+    "src/syncs/recipe.sync.ts",
+    "src/syncs/notebook.sync.ts"
   ]
 }

@@ -279,8 +279,223 @@ If the application scales, the following could be reconsidered:
 
 ---
 
+## Assignment 5: Backend Synchronizations
+
+### Introduction of Requesting Concept and Sync Engine
+
+**Major Addition:** Migrated from pass-through concept server to synchronization-based architecture.
+
+**What Changed:**
+
+- Added `Requesting` concept to reify HTTP requests as actions
+- Implemented sync engine to coordinate multi-concept operations
+- Added `Sessioning` concept for secure session management
+- Configured route inclusion/exclusion in `passthrough.ts`
+
+### Route Configuration Strategy
+
+**Included Routes (Passthrough - 21 routes):**
+
+- **Public actions**: User registration (`/api/User/registerUser`)
+- **Query endpoints**: All read-only queries (prefixed with `_`)
+  - Recipe queries: `_getRecipeById`, `_listRecipesByOwner`, `_searchRecipesByTag`
+  - Annotation queries: `_getAnnotationsForRecipe`, `_getAnnotationById`
+  - Notebook queries: `_getNotebookById`, `_getNotebooksByOwner`, etc.
+- **Internal actions**: `Sessioning.deleteSession` (logout), `Annotation.deleteByRecipe` (cascade)
+
+**Rationale:** Queries don't modify state, so they don't need authentication/authorization syncs. Direct passthrough improves performance.
+
+**Excluded Routes (Via Requesting - 13 routes):**
+
+- **Authentication-required actions**: All state-modifying operations
+  - User: `login` (needs session creation), `updateProfile`
+  - Recipe: `createRecipe`, `deleteRecipe`, `updateRecipeDetails`, `draftRecipeWithAI`, `applyDraft`
+  - Annotation: `annotate`, `editAnnotation`, `resolveAnnotation`, `deleteAnnotation`
+  - Notebook: `createNotebook`, `inviteMember`, `removeMember`, `shareRecipe`, `unshareRecipe`, `deleteNotebook`
+
+**Rationale:** These actions require multi-step orchestration (authentication → authorization → action → response).
+
+### Synchronization Patterns Implemented
+
+**1. Authentication & Session Management**
+
+**Pattern:** Login requires session creation
+```
+Request → User.login → Sessioning.createSession → Respond with session token
+```
+
+**Files:** `src/syncs/user_auth.sync.ts` (7 syncs)
+
+- `LoginRequest`: Triggers `User.login` from HTTP request
+- `CreateSessionAfterLogin`: Creates session after successful login
+- `LoginResponseWithSession`: Responds with user ID + session token
+- `LoginResponseError`: Handles login failures
+
+**Security Benefit:** Session token generation happens server-side, client cannot forge tokens.
+
+**2. Authorization Checks**
+
+**Pattern:** Validate session → Check ownership → Execute action
+
+**Example:** Recipe deletion (from `recipe.sync.ts`)
+```typescript
+where: async (frames) => {
+  // 1. Authenticate session
+  frames = await frames.query(Sessioning._getUser, { session }, { user: requester });
+  if (frames.length === 0) return error("Invalid session");
+  
+  // 2. Fetch recipe
+  frames = await frames.query(Recipe._getRecipeById, { recipe }, { recipe: recipeDoc });
+  if (frames.length === 0) return error("Recipe not found");
+  
+  // 3. Verify ownership
+  frames = frames.filter($ => $[requester] === $[recipeDoc].owner);
+  if (frames.length === 0) return error("Unauthorized");
+  
+  return frames;
+}
+```
+
+**Syncs:** 33+ total across all concepts
+
+**Security Benefit:** Authorization logic in backend, impossible for client to bypass.
+
+**3. Multi-Concept Coordination**
+
+**Pattern:** Cascade operations across concepts
+
+**Example:** Recipe deletion triggers annotation cleanup
+```
+Recipe.deleteRecipe → Annotation.deleteByRecipe
+```
+
+**Sync:** `CascadeAnnotationDeletion` in `recipe.sync.ts`
+
+**Data Integrity Benefit:** Ensures no orphaned annotations when recipes are deleted.
+
+**4. Complex Authorization (Notebook Sharing)**
+
+**Pattern:** Multiple authorization paths
+
+**Example:** Share recipe to notebook
+- User can share if they are **either** recipe owner **or** notebook member
+
+```typescript
+frames.filter($ => 
+  $[sharer] === $[recipeDoc].owner ||  // Recipe owner can share
+  $[notebookDoc].members.includes($[sharer])  // OR notebook member can share
+)
+```
+
+**Files:** `src/syncs/notebook.sync.ts` (16 syncs for 4 actions)
+
+### Session Management Architecture
+
+**Sessioning Concept** (New for Assignment 5)
+
+**Purpose:** Manage user sessions with automatic expiration
+
+**Key Features:**
+- 7-day session expiration via MongoDB TTL index
+- Session creation returns cryptographically random token
+- `_getUser(session)` query for authentication in syncs
+- Session deletion for logout
+
+**Integration with Syncs:**
+- Every authenticated sync queries `Sessioning._getUser` to validate session
+- Invalid sessions result in immediate error response
+- No concept action executes without valid session for protected routes
+
+### Synchronization Implementation Statistics
+
+**Total Syncs Implemented:** 33+
+
+**By Concept:**
+- User Auth: 7 syncs (login, logout flows)
+- Recipe: 20 syncs (5 actions × 4 syncs each)
+- Annotation: 16 syncs (4 actions × 4 syncs each)
+- Notebook: 24 syncs (6 actions × 4 syncs each)
+- Version Stubs: 2 syncs (graceful error handling)
+
+**Standard 4-Sync Pattern:**
+1. **Request Sync**: Validates & triggers action
+2. **Success Response**: Returns result on success
+3. **Error Response**: Returns concept action error
+4. **Precondition Error**: Returns sync validation error
+
+### Comparison: Frontend vs. Backend Syncs
+
+**Before (Assignment 4b - Frontend Syncs):**
+- Frontend coordinated multi-step operations
+- ⚠️ Security Risk: Client could bypass auth checks
+- ⚠️ Scattered Logic: Syncs distributed across Vue components
+- ⚠️ Easy to Forget: Developers might skip critical checks
+
+**After (Assignment 5 - Backend Syncs):**
+- ✅ Security: Server-side validation impossible to bypass
+- ✅ Centralized: All syncs in `src/syncs/` directory
+- ✅ Traceable: Logging shows exact sync execution flow
+- ✅ Testable: Syncs can be unit tested independently
+
+### Design Decisions & Rationale
+
+**1. Why exclude login but include registration?**
+
+- **Login excluded**: Needs to create session (multi-concept coordination)
+- **Registration included**: Single-concept operation, no session needed yet
+
+**2. Why include all query endpoints?**
+
+- Queries are read-only, no state modification
+- Performance: Direct queries faster than sync overhead
+- Security: Session validation could be added later if needed
+
+**3. Why 4 syncs per action?**
+
+- Comprehensive error handling
+- Separate paths for concept errors vs. sync validation errors
+- Clear separation of concerns
+
+**4. Why use Frames API instead of traditional async/await?**
+
+- Declarative sync specification
+- Engine handles action coordination automatically
+- Query multiplication (one frame can become many)
+- Built-in error propagation
+
+### Impact on Frontend (Assignment 4b Adjustments)
+
+**Required Changes:**
+
+1. **Add session parameter** to all authenticated requests:
+```typescript
+await apiRequest('/Recipe/createRecipe', {
+  session: sessionToken,  // NEW
+  title, ingredients, steps
+});
+```
+
+2. **Handle session errors** uniformly:
+```typescript
+if (result.error === "Invalid session") {
+  // Redirect to login
+}
+```
+
+3. **Remove redundant client-side checks**:
+- Ownership validation (now in backend)
+- Authorization logic (now in syncs)
+
+**Benefits:**
+- Simpler frontend code
+- More secure application
+- Consistent error handling
+
+---
+
 ## References
 
 - Full API Specification: [api-spec.md](api-spec.md)
+- Synchronizations Documentation: [SYNCHRONIZATIONS.md](SYNCHRONIZATIONS.md)
 - Concept Design Changes: [design/brainstorming/all-design-changes.md](design/brainstorming/all-design-changes.md)
 - Individual Concept Documentation: `design/concepts/{Concept}/`

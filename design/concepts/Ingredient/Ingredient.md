@@ -1,7 +1,7 @@
 ### concept Ingredient
 
-**purpose** represent a specific item needed for a recipe.\
-**principle** ingredients are foundational building blocks of recipes.
+**purpose** specify the items and quantities needed so users can prepare the recipe.\
+**principle** after defining ingredients with their quantities and units, users have a clear shopping list for making the recipe.
 
 **state**
 
@@ -12,4 +12,4 @@
 
 **actions**
 
-*   (Generally managed within Recipe/Version actions)
+*   (Ingredients are embedded data structures within Recipe; their lifecycle is managed by Recipe actions)

@@ -53,28 +53,12 @@ export const CreateRecipeRequest: Sync = ({
       { session },
       { user: owner },
     );
-    console.log(
-      "🔍 CreateRecipeRequest where - frames after query:",
-      frames.length,
-    );
-    if (frames.length > 0) {
-      console.log(
-        "🔍 CreateRecipeRequest where - owner value:",
-        frames[0][owner],
-      );
-    }
     frames = frames.filter(($) => typeof $[owner] === "string");
-    console.log(
-      "🔍 CreateRecipeRequest where - frames after filter:",
-      frames.length,
-    );
     if (frames.length === 0) {
-      console.log("🔍 CreateRecipeRequest where - returning error frame");
       const frameWithError = cloneFrame(originalFrame);
       frameWithError[error] = "Session invalid or expired.";
       return new Frames(frameWithError);
     }
-    console.log("🔍 CreateRecipeRequest where - returning success frames");
     return frames;
   },
   then: actions([
@@ -331,16 +315,6 @@ export const UpdateRecipeDetailsRequest: Sync = ({
   requester,
   requestDoc,
 }) => {
-  console.log("🔵 UpdateRecipeDetailsRequest SYNC FACTORY CALLED");
-  console.log("🔵 Parameters:", {
-    request,
-    session,
-    recipe,
-    newTitle,
-    newDescription,
-    newIngredients,
-    newSteps,
-  });
   return {
     when: actions([
       Requesting.request,
@@ -466,10 +440,6 @@ export const UpdateRecipeDetailsRequest: Sync = ({
  * Sync UpdateRecipeDetailsResponse
  */
 export const UpdateRecipeDetailsResponse: Sync = ({ request }) => {
-  console.log(
-    "🔔 UpdateRecipeDetailsResponse - Sync triggered for request:",
-    request,
-  );
   return {
     when: actions(
       [Requesting.request, { path: "/Recipe/updateRecipeDetails" }, {
@@ -489,10 +459,6 @@ export const UpdateRecipeDetailsResponse: Sync = ({ request }) => {
  * Handles errors from `Recipe.updateRecipeDetails` or custom errors from `where` clause.
  */
 export const UpdateRecipeDetailsErrorResponse: Sync = ({ request, error }) => {
-  console.log(
-    "🔔 UpdateRecipeDetailsErrorResponse - Error sync triggered:",
-    error,
-  );
   return {
     when: actions(
       [Requesting.request, { path: "/Recipe/updateRecipeDetails" }, {
@@ -508,10 +474,6 @@ export const UpdateRecipeDetailsCustomErrorResponse: Sync = ({
   request,
   error,
 }) => {
-  console.log(
-    "🔔 UpdateRecipeDetailsCustomErrorResponse - Custom error sync triggered:",
-    error,
-  );
   return {
     when: actions([
       Requesting.request,
@@ -694,20 +656,6 @@ export const ApplyDraftRequest: Sync = ({
       { recipe },
       { recipe: recipeDoc },
     );
-    console.log(
-      "🔍 ApplyDraftRequest - frames after recipe query:",
-      frames.length,
-    );
-    if (frames.length > 0) {
-      console.log(
-        "🔍 ApplyDraftRequest - recipeDoc value:",
-        frames[0][recipeDoc],
-      );
-      console.log(
-        "🔍 ApplyDraftRequest - recipeDoc.owner:",
-        (frames[0][recipeDoc] as any)?.owner,
-      );
-    }
     if (frames.length === 0) {
       return new Frames({ ...frameAfterRequester, error: "Recipe not found" });
     }

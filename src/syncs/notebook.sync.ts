@@ -53,26 +53,15 @@ export const CreateNotebookRequest_SuccessPath: Sync = ({
     { request },
   ]),
   where: async (frames) => {
-    console.log(
-      "🔍 CreateNotebookRequest_SuccessPath where clause - input frames:",
-      frames.length,
-    );
     // 1. Get the user from the session. `Sessioning._getUser` returns { user: ID } or { error: string }.
     frames = await frames.query(
       Sessioning._getUser,
       { session },
       { user: owner },
     ); // Bind query result field "user" to symbol `owner`
-    console.log("🔍 After query - frames:", frames.length);
     frames = frames.filter(
       ($) => $[owner] !== undefined && !hasErrorInFrame($),
     ); // Filter out error frames
-    console.log(
-      "🔍 After filter - frames:",
-      frames.length,
-      "owner defined:",
-      frames.length > 0 ? frames[0][owner] !== undefined : false,
-    );
 
     // Return only frames where a valid owner was found
     return frames;
@@ -205,19 +194,6 @@ export const InviteMemberRequest_SuccessPath: Sync = ({
     const ownershipFrames = frames.filter(($) =>
       $[requesterUser] === ($[notebookDoc] as any)?.owner
     );
-    console.log(
-      "🔍 InviteMemberRequest_SuccessPath - ownership check frames:",
-      ownershipFrames.length,
-    );
-    if (ownershipFrames.length > 0) {
-      console.log(
-        "✅ InviteMemberRequest_SuccessPath - requester IS owner, will call inviteMember",
-      );
-    } else {
-      console.log(
-        "❌ InviteMemberRequest_SuccessPath - requester is NOT owner, returning empty",
-      );
-    }
     return ownershipFrames;
   },
   then: actions([
@@ -251,9 +227,6 @@ export const InviteMemberRequest_PreconditionError: Sync = ({
     { request },
   ]),
   where: async (frames) => {
-    console.log(
-      "🔍 InviteMemberRequest_PreconditionError - checking preconditions",
-    );
     const originalRequestFrame = frames[0];
     let currentFrames = new Frames(originalRequestFrame); // Start with the request frame for error context
 

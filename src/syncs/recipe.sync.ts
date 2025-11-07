@@ -1,7 +1,13 @@
 // These two help you declare synchronizations
 
 // Choose whatever concepts you have
-import { Annotation, Recipe, Requesting, Sessioning } from "@concepts";
+import {
+  Annotation,
+  Notebook,
+  Recipe,
+  Requesting,
+  Sessioning,
+} from "@concepts";
 import { actions, Frames, type Sync } from "@engine";
 
 function cloneFrame(frame: Record<PropertyKey, unknown>) {
@@ -255,6 +261,55 @@ export const CascadeAnnotationDeletion: Sync = ({ recipe }) => ({
   // The Annotation.deleteByRecipe action already handles deleting all annotations
   // for a given recipe ID, so no specific 'where' clause to iterate annotations is needed here.
   then: actions([Annotation.deleteByRecipe, { recipeId: recipe }]),
+});
+
+/**
+ * Sync CascadeNotebookUnshareOnRecipeDeletion
+ * Ensures that when a recipe is deleted, it is removed from any notebooks that referenced it.
+ */
+export const CascadeNotebookUnshareOnRecipeDeletion: Sync = ({
+  recipe,
+  notebookDoc,
+  notebookId,
+  requester,
+}) => ({
+  when: actions([Recipe.deleteRecipe, { recipe }, {}]),
+  where: async (frames) => {
+    frames = await frames.query(
+      Notebook._getNotebooksContainingRecipe,
+      { recipe },
+      { notebook: notebookDoc },
+    );
+
+    frames = frames.map(($) => {
+      const clone = cloneFrame($);
+      const value = clone[notebookDoc];
+      if (
+        value &&
+        typeof value === "object" &&
+        "_id" in value &&
+        "owner" in value &&
+        typeof (value as { _id?: unknown })._id === "string" &&
+        typeof (value as { owner?: unknown }).owner === "string"
+      ) {
+        const { _id, owner } = value as { _id: string; owner: string };
+        clone[notebookId] = _id;
+        clone[requester] = owner;
+      }
+      return clone;
+    });
+
+    frames = frames.filter(
+      ($) =>
+        typeof $[notebookId] === "string" && typeof $[requester] === "string",
+    );
+
+    return frames;
+  },
+  then: actions([
+    Notebook.unshareRecipe,
+    { requester, recipe, notebook: notebookId },
+  ]),
 });
 
 // --- Other Recipe Actions (Examples for update, addTag, etc.) ---

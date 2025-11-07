@@ -86,7 +86,10 @@ export default class RequestingConcept {
     path: string;
     [key: string]: unknown;
   }): Promise<{ request: Request }> {
-    console.log("🟢 Requesting.request ACTION CALLED with inputs:", JSON.stringify(inputs, null, 2));
+    console.log(
+      "🟢 Requesting.request ACTION CALLED with inputs:",
+      JSON.stringify(inputs, null, 2),
+    );
     const requestId = freshID() as Request;
     console.log("🟢 Generated request ID:", requestId);
     const requestDoc: RequestDoc = {
@@ -233,6 +236,7 @@ export function startRequestingServer(
     "/*",
     cors({
       origin: REQUESTING_ALLOWED_DOMAIN,
+      credentials: true,
     }),
   );
 
